@@ -82,30 +82,29 @@ PImage drawing;
 
 PShape heart;
 
-PShape obj;
+ArrayList<String> sPaths = new ArrayList<String>();
+ArrayList<PShape> shapes = new ArrayList<PShape>();
+
 
 void setup() {
+  sPaths.add("data/mug-photo.obj");
+  sPaths.add("data/umbrella-flowers.obj");
+  sPaths.add("data/shirt-flowers.obj");
+  
   size(1000, 1000, P3D);
   photo = loadImage("photo.jpg");
   newspaper = loadImage("newspaper.jpg");
   drawing = loadImage("drawing.jpg");
-  obj = loadShape("data/mug-3-textures.obj");
-  obj.scale(50);
+  
+  for (int i=0;i<sPaths.size(); ++i) {
+    PShape obj = loadShape(sPaths.get(i));
+    obj.scale(20);
+    shapes.add(obj);
+  }
   /*for (int i = 0; i < obj.getChildCount(); i++) {
     PShape child = obj.getChild(i);
     child.setTexture(photo);
   }*/
-  /*heart = createShape();
-  heart.beginShape();
-  heart.fill(255, 0, 0);
-  heart.noStroke();
-  heart.vertex(50, 15);
-  heart.bezierVertex(50, -5, 90, 5, 50, 40);
-  heart.vertex(50, 15);
-  heart.bezierVertex(50, -5, 10, 5, 50, 40);
-  heart.endShape(CLOSE);*/
-  
-
 }
 
 void draw() {
@@ -114,5 +113,7 @@ void draw() {
   translate(width/2, height/2);
   //rotateX(QUARTER_PI);
   //rotateY(frameCount * 0.01);
-  shape(obj);
+  for (int i=0;i<shapes.size();++i) {
+    shape(shapes.get(i), (float)(i*width/3.0) - width/3.0, height/5.0);
+  } 
 }
