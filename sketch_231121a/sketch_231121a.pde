@@ -1,4 +1,8 @@
 //------------------------------
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Comparator;
+import java.util.Collections;
 
 class Shape {
   PShape obj;
@@ -92,50 +96,176 @@ class Shape {
    }
 }
 
-class TextureDescr
+class ObjDescr
 {
   String name;
   String path;
   
-  TextureDescr(String name, String path)
+  ObjDescr(String name, String path)
   {
     this.name = name;
     this.path = path;
   }
 }
 
-ArrayList<String> sPaths = new ArrayList<String>();
-ArrayList<TextureDescr> tPaths = new ArrayList<TextureDescr>();
-ArrayList<Shape> shapes = new ArrayList<Shape>();
-ArrayList<Shape> t = new ArrayList<Shape>();
+class Scene {
+
+  ArrayList<ObjDescr> sPaths = new ArrayList<ObjDescr>();
+  ArrayList<ObjDescr> tPaths = new ArrayList<ObjDescr>();
+  ArrayList<Shape> shapes = new ArrayList<Shape>();
+  ArrayList<Shape> t = new ArrayList<Shape>();
+  Set<String> selT = new HashSet<>();
+  Shape selShape = null;
+  Shape cShape = null;
+  ArrayList<String> objFiles = new ArrayList<String>();
+  
+  void Create() {
+    tPaths.add(new ObjDescr("news", "data/newspaper-square.jpg"));
+    tPaths.add(new ObjDescr("flowers", "data/drawing-square.jpg"));
+    tPaths.add(new ObjDescr("photo", "data/photo-square.jpg"));
+    sPaths.add(new ObjDescr("mug", "data/mug.obj"));
+    sPaths.add(new ObjDescr("umbrella", "data/umbrella.obj"));
+    sPaths.add(new ObjDescr("shirt", "data/shirt.obj"));
+    PImage zeroTex = loadImage("data/2x2.jpg");  
+    
+    float w = 1000;
+    float h = 1000;
+    for (int i=0;i<tPaths.size();++i) {
+      PShape plane = loadShape("data/plane.obj");
+      plane.scale(200);  
+      Shape sh = new Shape(plane, tPaths.get(i).name);
+      t.add(sh);
+      sh.applyTexture(loadImage(tPaths.get(i).path));  
+      sh.setVPos((float)(i*w/3.0) - w/3.0, -h/5.0);
+    }
+    for (int i=0;i<sPaths.size(); ++i) {
+      PShape obj = loadShape(sPaths.get(i).path);
+      Shape sh = new Shape(obj, sPaths.get(i).name);
+      sh.scale(20);
+      shapes.add(sh);    
+      sh.setVPos((float)(i*w/3.0) - w/3.0, h/5.0);
+      //applyTexture(obj, zeroTex);
+    }
+    loadObjFiles();
+  }
+  
+  void loadObjFiles() {
+    File folder = new File(dataPath(""));
+    File[] listOfFiles = folder.listFiles();
+    for (File file : listOfFiles) {
+    if (file.isFile()) {
+      println("File: " + file.getName());
+      if (file.getName().endsWith(".obj")) {
+        objFiles.add(file.getName());
+      }
+    } else if (file.isDirectory()) {
+      println("Directory: " + file.getName());
+    }
+    }
+    println("Loaded " +objFiles.size()+" models");
+  }
+  
+  void draw() {
+    if (cShape != null)
+    {
+      cShape.draw();
+    } 
+    else 
+    {
+      for (int i=0;i<shapes.size();++i) {
+        t.get(i).draw();
+        shapes.get(i).draw();
+      }
+    }
+  }
+  
+  void clear() {
+    cShape = null;
+    selT.clear();
+    selShape = null;
+  }
+  
+  ArrayList<String> generateAllNames() {
+    ArrayList<String> r = new ArrayList<String>();
+    generateAllNamesR(r, selT);
+    return r;  
+  }
+  
+  List<String> generateAllNamesR(Set<String> s) {
+    List<String> r = new List<String>();
+    if (s.size() == 0)
+       return r;
+    if (s.size() == 1)
+      for (String str : s)
+      {  
+        r.add(str);
+        return r;
+      }
+    for (String str : s) {
+      Set<String> newS = new HashSet(s);
+      newS.remove(str);
+      List<String> sx = generateAllNamesR(newS);
+      r.addAll(sx);
+    }
+    return r;
+  }
+  
+  void generateCollage() {
+    
+    ArrayList<String> allSuff = generateAllNames();
+    Comparator<String> byLength = new Comparator<String>() {
+    public int compare(String s1, String s2) {
+      return Integer.compare(s2.length(), s1.length());
+    }
+  };
+  Collections.sort(allSuff, byLength);
+    println("Suff generated "+allSuff.size());
+    for (String suff : allSuff) {
+      println("  "+suff);
+    }
+    String cfName = "";
+    for (String suff : allSuff) {
+      String objName = selShape.name + "-" + suff + ".obj";  
+      println("Cheking file name "+objName);
+      if (objFiles.indexOf(objName) >= 0) {
+        cfName = objName;
+        break;
+      }
+    }
+   
+    if (cfName == "")
+    {
+      println("Can't create collage from "+selT.size()+ " textures"); 
+      return;
+    }
+    println("Showing collage "+cfName+ " from "+selT.size()+" textures");
+    PShape obj = loadShape(cfName);
+    cShape = new Shape(obj, "Collage");
+    cShape.scale(50);
+    cShape.setVPos(0.0, 0.0);  
+  }
+  
+  void OnMousePressed(float mouseX, float mouseY, float w, float h) {
+    for (int i=0;i<t.size();++i) {
+      if (t.get(i).isInside(mouseX, mouseY, w, h)) {
+        println("Click to "+t.get(i).name);
+        selT.add(t.get(i).name);
+      }
+    }
+    for (int i=0;i<shapes.size(); ++i) {
+      if (shapes.get(i).isInside(mouseX, mouseY, w, h)) {
+        println("Click to "+shapes.get(i).name);
+        selShape = shapes.get(i);  
+      }
+    }
+  }
+}
+
+Scene scene = new Scene();
 
 void setup() {
-  tPaths.add(new TextureDescr("news", "data/newspaper-square.jpg"));
-  tPaths.add(new TextureDescr("flowers", "data/drawing-square.jpg"));
-  tPaths.add(new TextureDescr("photo", "data/photo-square.jpg"));
-  sPaths.add("data/mug.obj");
-  sPaths.add("data/umbrella.obj");
-  sPaths.add("data/shirt.obj");
-  PImage zeroTex = loadImage("data/2x2.jpg");  
   size(1000, 1000, P3D);
-  float w = 1000;
-  float h = 1000;
-  for (int i=0;i<tPaths.size();++i) {
-    PShape plane = loadShape("data/plane.obj");
-    plane.scale(200);  
-    Shape sh = new Shape(plane, tPaths.get(i).name);
-    t.add(sh);
-    sh.applyTexture(loadImage(tPaths.get(i).path));  
-    sh.setVPos((float)(i*w/3.0) - w/3.0, -h/5.0);
-  }
-  for (int i=0;i<sPaths.size(); ++i) {
-    PShape obj = loadShape(sPaths.get(i));
-    Shape sh = new Shape(obj, sPaths.get(i));
-    sh.scale(20);
-    shapes.add(sh);    
-    sh.setVPos((float)(i*w/3.0) - w/3.0, h/5.0);
-    //applyTexture(obj, zeroTex);
-  }
+  scene.Create();  
 }
 
 void draw() {
@@ -144,16 +274,20 @@ void draw() {
  translate(width/2, height/2);
   //rotateX(QUARTER_PI);
   //rotateY(frameCount * 0.01);
+ scene.draw(); 
   
-  for (int i=0;i<shapes.size();++i) {
-    t.get(i).draw();
-    shapes.get(i).draw();
-  }
 }
+
+
 
 void keyReleased() {
   if (key == 'g') {
-    println("The 'a' key was released.");
+    println("The 'g' key was released.");
+    scene.generateCollage();   
+  }
+  if (key == 'c') {
+    println("The 'c' key was released.");
+    scene.clear();   
   }
   // You can add more conditions for other keys here
 }
@@ -161,16 +295,7 @@ void keyReleased() {
 void mousePressed() {
   
   //println("Dir "+dir);
-  for (int i=0;i<t.size();++i) {
-    if (t.get(i).isInside(mouseX, mouseY, width, height)) {
-      println("Click to "+t.get(i).name);
-    }
-  }
-  /*for (int i=0;i<shapes.size(); ++i) {
-    if (shapes.get(i).isInside(mouseX, mouseY, width, height)) {
-      println("Click to "+shapes.get(i).name);
-    }
-  }*/
+  scene.OnMousePressed(mouseX, mouseY, width, height);
   // Now 'dir' is the direction of the ray. 
   // You can use it to check for intersections with objects in your scene.
 }
