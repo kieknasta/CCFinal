@@ -185,14 +185,9 @@ class Scene {
     selShape = null;
   }
   
-  ArrayList<String> generateAllNames() {
-    ArrayList<String> r = new ArrayList<String>();
-    generateAllNamesR(r, selT);
-    return r;  
-  }
   
-  List<String> generateAllNamesR(Set<String> s) {
-    List<String> r = new List<String>();
+  ArrayList<String> generateAllNamesR(Set<String> s) {
+    ArrayList<String> r = new ArrayList<String>();
     if (s.size() == 0)
        return r;
     if (s.size() == 1)
@@ -204,15 +199,17 @@ class Scene {
     for (String str : s) {
       Set<String> newS = new HashSet(s);
       newS.remove(str);
-      List<String> sx = generateAllNamesR(newS);
-      r.addAll(sx);
+      ArrayList<String> se = generateAllNamesR(newS);
+      for (String t : se) {
+        r.add(str+"-"+t);
+      }
     }
     return r;
   }
   
   void generateCollage() {
     
-    ArrayList<String> allSuff = generateAllNames();
+    ArrayList<String> allSuff = generateAllNamesR(selT);
     Comparator<String> byLength = new Comparator<String>() {
     public int compare(String s1, String s2) {
       return Integer.compare(s2.length(), s1.length());
@@ -269,7 +266,7 @@ void setup() {
 }
 
 void draw() {
- background(100);
+ background(0);
  lights();
  translate(width/2, height/2);
   //rotateX(QUARTER_PI);

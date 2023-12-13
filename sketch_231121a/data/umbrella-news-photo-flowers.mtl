@@ -1,0 +1,28 @@
+newmtl umbrella_news_photo_flower:lambert2SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd newspaper-square.jpg
+Ni 1.00
+newmtl umbrella_news_photo_flower:lambert4SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd drawing-square.jpg
+Ni 1.00
+newmtl umbrella_news_photo_flower:lambert6SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd photo-square.jpg
+Ni 1.00
+newmtl umbrella_news_photo_flower:lambert7SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd photo-square.jpg
+Ni 1.00
