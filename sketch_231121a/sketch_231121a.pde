@@ -15,7 +15,7 @@ class Shape {
   float yaw;
   
   Shape(PShape obj,String name){
-    bbs = 100.0f;
+    bbs = 200.0f;
     this.obj = obj;
     this.name = name;
     calcBBox();
@@ -129,6 +129,8 @@ class Scene {
   float pitch, yaw;
   float lastMX, lastMY;
   float w, h;
+  String ttCurr;
+  String ttAll;
   
   void Create() {
     tPaths.add(new ObjDescr("news", "data/newspaper-square.jpg"));
@@ -161,6 +163,8 @@ class Scene {
     mousePressed = false;
     pitch = 0.0f;
     yaw = 0.0f;
+    ttAll = "Select one shape and up to three textures and press 'g' key";
+    ttCurr = "";
   }
   
   void loadObjFiles() {
@@ -181,6 +185,9 @@ class Scene {
   
   void draw(float frameCount) {
     directionalLight(255, 255, 255, 0, 0, -1);
+    if (ttCurr.length()<ttAll.length() && frameCount % 5 == 0) {
+      ttCurr = ttCurr + ttAll.charAt(ttCurr.length());
+    }
     if (cShape != null)
     {
       rotateX(pitch);
@@ -188,12 +195,15 @@ class Scene {
       cShape.draw();
       //rotateX(-pitch);
       //rotateY(-yaw);
-      text("Drag the mouse to rotate or press 'c' key to go back", -w*3.0f/8.0f, h*3.0f/8.0f);
+      text(ttCurr, -w*3.0f/8.0f, -h*3.0f/8.0f);
     } 
     else 
     {
       if  (selShape != null) {
         selShape.yaw = 0.01f * frameCount;
+      }
+      for (int i=0;i<t.size();++i) {
+        t.get(i).yaw = selT.contains(t.get(i).name) ? 0.01f * frameCount : 0.0f;
       }
       for (int i=0;i<shapes.size();++i) {
         t.get(i).draw();
@@ -202,7 +212,7 @@ class Scene {
       
       fill(255);
       //hint(DISABLE_DEPTH_TEST);
-      text("Select one shape and up to three textures and press 'g' key", -w*3.0f/8.0f, h*3.0f/8.0f);
+      text(ttCurr, -w*3.0f/8.0f, -h*3.0f/8.0f);
     }
   }
   
@@ -212,6 +222,8 @@ class Scene {
     selShape = null;
     pitch = 0.0f;
     yaw = 0.0f;
+    ttAll = "Select one shape and up to three textures and press 'g' key";
+    ttCurr = "";
   }
   
   
@@ -269,13 +281,18 @@ class Scene {
     cShape = new Shape(obj, "Collage");
     cShape.scale(50);
     cShape.setVPos(0.0, 0.0);  
+    ttAll = "Drag the mouse to rotate or press 'c' key to go back";
+    ttCurr = "";  
   }
   
   void OnMousePressed(float mouseX, float mouseY, float w, float h) {
     for (int i=0;i<t.size();++i) {
       if (t.get(i).isInside(mouseX, mouseY, w, h)) {
         println("Click to "+t.get(i).name);
-        selT.add(t.get(i).name);
+        if (selT.contains(t.get(i).name))
+          selT.remove(t.get(i).name);
+        else
+          selT.add(t.get(i).name);
       }
     }
     for (int i=0;i<shapes.size(); ++i) {
