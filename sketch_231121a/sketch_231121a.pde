@@ -12,6 +12,7 @@ class Shape {
   PShape bbox;
   PVector vPos;
   float bbs;
+  float yaw;
   
   Shape(PShape obj,String name){
     bbs = 100.0f;
@@ -19,7 +20,7 @@ class Shape {
     this.name = name;
     calcBBox();
     println("Shape "+name+"min: "+min+" max: "+max);
-    //createBBox();
+    yaw = 0.0f;
   }
   
   void setVPos(float x, float y) {
@@ -36,7 +37,13 @@ class Shape {
   }
   
   void drawAt(float x, float y) {
+    //rotateX(pitch);
+    pushMatrix();
+    translate(vPos.x, vPos.y);
+    rotateY(yaw);
+    translate(-vPos.x, -vPos.y);
     shape(obj, x, y);
+    popMatrix();
     //stroke(255, 0, 0);
     //noFill();
     //shape(bbox, x, y);
@@ -118,6 +125,10 @@ class Scene {
   Shape selShape = null;
   Shape cShape = null;
   ArrayList<String> objFiles = new ArrayList<String>();
+  boolean mousePressed;
+  float pitch, yaw;
+  float lastMX, lastMY;
+  float w, h;
   
   void Create() {
     tPaths.add(new ObjDescr("news", "data/newspaper-square.jpg"));
@@ -128,8 +139,8 @@ class Scene {
     sPaths.add(new ObjDescr("shirt", "data/shirt.obj"));
     PImage zeroTex = loadImage("data/2x2.jpg");  
     
-    float w = 1000;
-    float h = 1000;
+    w = 1000.f;
+    h = 1000.f;
     for (int i=0;i<tPaths.size();++i) {
       PShape plane = loadShape("data/plane.obj");
       plane.scale(200);  
@@ -147,6 +158,9 @@ class Scene {
       //applyTexture(obj, zeroTex);
     }
     loadObjFiles();
+    mousePressed = false;
+    pitch = 0.0f;
+    yaw = 0.0f;
   }
   
   void loadObjFiles() {
@@ -165,17 +179,30 @@ class Scene {
     println("Loaded " +objFiles.size()+" models");
   }
   
-  void draw() {
+  void draw(float frameCount) {
+    directionalLight(255, 255, 255, 0, 0, -1);
     if (cShape != null)
     {
+      rotateX(pitch);
+      rotateY(yaw);
       cShape.draw();
+      //rotateX(-pitch);
+      //rotateY(-yaw);
+      text("Drag the mouse to rotate or press 'c' key to go back", -w*3.0f/8.0f, h*3.0f/8.0f);
     } 
     else 
     {
+      if  (selShape != null) {
+        selShape.yaw = 0.01f * frameCount;
+      }
       for (int i=0;i<shapes.size();++i) {
         t.get(i).draw();
         shapes.get(i).draw();
       }
+      
+      fill(255);
+      //hint(DISABLE_DEPTH_TEST);
+      text("Select one shape and up to three textures and press 'g' key", -w*3.0f/8.0f, h*3.0f/8.0f);
     }
   }
   
@@ -183,6 +210,8 @@ class Scene {
     cShape = null;
     selT.clear();
     selShape = null;
+    pitch = 0.0f;
+    yaw = 0.0f;
   }
   
   
@@ -255,13 +284,38 @@ class Scene {
         selShape = shapes.get(i);  
       }
     }
+    mousePressed = true;
+    lastMX = mouseX;
+    lastMY = mouseY;
   }
+  
+  void OnMouseReleased(float mouseX, float mouseY, float w, float h) {
+    mousePressed = false;
+  }
+  
+  void OnMouseMoved(float mouseX, float mouseY) {
+    if  (!mousePressed || cShape == null) {
+      return;
+    }
+    println("w:"+w+" h: "+h);
+    float dX = (mouseX - lastMX)/w;
+    float dY = (mouseY - lastMY)/h;
+    println("Dx:"+dX+" Dy: "+dY);
+    float rR = 1.f;
+    pitch -= dY/rR;
+    yaw += dX/rR;
+    println("Current pitch: "+pitch+" yaw: "+yaw);
+    lastMX = mouseX;
+    lastMY = mouseY;
+  }
+  
 }
 
 Scene scene = new Scene();
 
 void setup() {
   size(1000, 1000, P3D);
+  textSize(32);
   scene.Create();  
 }
 
@@ -271,8 +325,7 @@ void draw() {
  translate(width/2, height/2);
   //rotateX(QUARTER_PI);
   //rotateY(frameCount * 0.01);
- scene.draw(); 
-  
+ scene.draw(frameCount);  
 }
 
 
@@ -295,4 +348,20 @@ void mousePressed() {
   scene.OnMousePressed(mouseX, mouseY, width, height);
   // Now 'dir' is the direction of the ray. 
   // You can use it to check for intersections with objects in your scene.
+}
+
+void mouseReleased() {
+  // Code to execute when the mouse is released
+  println("Mouse released");
+  scene.OnMouseReleased(mouseX, mouseY, width, height);
+}
+
+void mouseMoved() {
+  // Code to execute when the mouse is moved
+  println("Mouse moved to x: " + mouseX + ", y: " + mouseY);
+  scene.OnMouseMoved(mouseX, mouseY);
+}
+
+void mouseDragged() {
+    scene.OnMouseMoved(mouseX, mouseY);
 }
